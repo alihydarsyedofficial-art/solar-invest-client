@@ -1,193 +1,119 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { Zap, Wallet, TrendingUp, ShieldCheck, ChevronRight, AlertCircle } from 'lucide-react';
 
 const Home = () => {
   const [balance, setBalance] = useState(0);
-  const [userUid, setUserUid] = useState(null);
-  const [loadingPlan, setLoadingPlan] = useState(null); 
   const [plans, setPlans] = useState([]);
-  const [fetchingPlans, setFetchingPlans] = useState(true);
+  const [userUid, setUserUid] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ফায়ারবেস থেকে ডেটা ফেচিং লজিক (আগের মতোই)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserUid(user.uid);
-        const userDocRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          setBalance(userSnap.data().balance || 0);
-        }
+        const userSnap = await getDoc(doc(db, 'users', user.uid));
+        if (userSnap.exists()) setBalance(userSnap.data().balance || 0);
       }
     });
+
+    const fetchPlans = async () => {
+      const querySnapshot = await getDocs(collection(db, 'plans'));
+      setPlans(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    };
+
+    fetchPlans();
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'plans'));
-        const plansData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setPlans(plansData);
-      } catch (error) {
-        console.error("Error fetching plans:", error);
-      } finally {
-        setFetchingPlans(false);
-      }
-    };
-    fetchPlans();
-  }, []);
-
-  const handleBuyPlan = async (plan) => {
-    if (!userUid) return alert('Please login first!');
-    setLoadingPlan(plan.id);
+  const handleJoin = async (plan) => {
+    if (!userUid) return alert("Please login first!");
+    if (balance < plan.price) return alert("Insufficient balance!");
 
     try {
-      const userDocRef = doc(db, 'users', userUid);
-      const userSnap = await getDoc(userDocRef);
-      
-      if (!userSnap.exists()) return alert("User account not found!");
-
-      const currentBalance = userSnap.data().balance || 0;
-      if (currentBalance < plan.price) {
-         alert('Insufficient balance! Please add money to your wallet.');
-         setLoadingPlan(null);
-         return;
-      }
-
-      const newBalance = currentBalance - plan.price;
-      await updateDoc(userDocRef, { balance: newBalance });
+      await updateDoc(doc(db, 'users', userUid), { balance: balance - plan.price });
       await addDoc(collection(db, 'investments'), {
         userId: userUid,
-        planId: plan.id,
         planName: plan.name,
         price: plan.price,
-        dailyReturn: plan.daily,
-        validity: plan.validity,
+        daily: plan.daily,
         status: 'Active',
-        purchasedAt: serverTimestamp()
+        date: serverTimestamp()
       });
-
-      setBalance(newBalance);
-      alert(`🎉 Successfully purchased ${plan.name}!`);
-    } catch (error) {
-      console.error("Error buying plan: ", error);
-      alert('Transaction failed! Please try again.');
-    } finally {
-      setLoadingPlan(null);
+      setBalance(prev => prev - plan.price);
+      alert("Successfully joined " + plan.name);
+    } catch (e) {
+      alert("Error processing transaction");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.15),rgba(255,255,255,0))] text-slate-200 pb-24 font-sans">
-      
-      <div className="p-5 max-w-md mx-auto">
-        {/* Top Header - Glassmorphism */}
-        <div className="flex justify-between items-center mb-8 pt-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 tracking-tight">
-              Solar Invest
-            </h1>
-            <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 font-medium">
-              <Zap size={12} className="text-yellow-400" /> Powering the future
-            </p>
-          </div>
-          <div className="h-10 w-10 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-            <ShieldCheck size={20} className="text-emerald-400" />
-          </div>
+    <div className="min-h-screen bg-[#0f172a] text-white pb-24 font-['Poppins',sans-serif]">
+      {/* Header */}
+      <div className="p-5 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Solar Invest</h2>
+          <p className="text-gray-400">Welcome Back</p>
         </div>
+        <div className="w-[45px] h-[45px] rounded-full bg-[#334155]"></div>
+      </div>
 
-        {/* Premium Balance Card */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-900 rounded-3xl p-6 mb-8 shadow-[0_10px_40px_-10px_rgba(16,185,129,0.5)] border border-emerald-500/30">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-          <div className="relative z-10">
-            <p className="text-emerald-100 text-sm font-medium flex items-center gap-2 mb-1">
-              <Wallet size={16} /> Total Balance
-            </p>
-            <h2 className="text-4xl font-bold text-white tracking-tight">
-              <span className="text-2xl text-emerald-200 pr-1">৳</span>
-              {balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </h2>
-            <div className="mt-6 flex gap-3">
-              <button className="flex-1 bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-md border border-white/10 text-white py-2.5 rounded-xl text-sm font-semibold shadow-sm">
-                Deposit
-              </button>
-              <button className="flex-1 bg-black/20 hover:bg-black/30 transition-colors backdrop-blur-md border border-white/5 text-white py-2.5 rounded-xl text-sm font-semibold shadow-sm">
-                Withdraw
-              </button>
+      {/* Balance Card */}
+      <div className="m-4 p-6 rounded-[25px] bg-gradient-to-br from-[#06b6d4] to-[#2563eb] shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+        <h3 className="text-sm opacity-80">Total Assets</h3>
+        <div className="text-[34px] font-bold mt-2">৳ {balance.toLocaleString()}</div>
+        <div className="mt-2 text-[#d1fae5]">Real-time Assets</div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-4 gap-2.5 p-4">
+        {['💰 Deposit', '🏧 Withdraw', '👥 Invite', '📈 Income'].map((item, i) => (
+          <div key={i} className="bg-[#1e293b] p-4 rounded-[18px] text-center text-xs">
+            <span className="text-2xl block mb-2">{item.split(' ')[0]}</span>
+            {item.split(' ')[1]}
+          </div>
+        ))}
+      </div>
+
+      {/* VIP */}
+      <div className="bg-gradient-to-br from-[#f59e0b] to-[#f97316] m-4 p-5 rounded-[20px]">
+        <h2 className="text-[22px] font-bold">VIP Solar Plan</h2>
+        <p className="mt-1 opacity-90">Daily Profit Up To 5%</p>
+      </div>
+
+      {/* Plans Section */}
+      <div className="p-4">
+        <div className="text-lg font-semibold mb-4">Investment Plans</div>
+        {loading ? <p className="text-center">Loading...</p> : plans.map(plan => (
+          <div key={plan.id} className="bg-[#1e293b] p-5 rounded-[18px] mb-3 flex justify-between items-center">
+            <div>
+              <h4 className="font-bold">{plan.name}</h4>
+              <p className="text-gray-400 text-sm">Invest ৳{plan.price}</p>
             </div>
+            <button onClick={() => handleJoin(plan)} className="bg-[#22c55e] px-5 py-2.5 rounded-[10px] font-semibold">Join</button>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Animated Offer Banner */}
-        <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/20 p-4 rounded-2xl mb-8 backdrop-blur-md flex items-start gap-3">
-          <div className="bg-purple-500/20 p-2 rounded-lg">
-            <Zap size={20} className="text-purple-400 animate-pulse" />
-          </div>
-          <div>
-            <h3 className="font-bold text-purple-300 text-sm mb-1">Special Bonus Active!</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Deposit ৳5000+ today and instantly receive a <span className="text-emerald-400 font-bold">5% cashback</span> in your wallet.</p>
-          </div>
+      {/* Stats */}
+      <div className="p-4 grid grid-cols-2 gap-3">
+        <div className="bg-[#1e293b] p-5 rounded-[18px]">
+          <h4 className="text-gray-400 text-xs">Total Profit</h4>
+          <p className="text-2xl font-bold mt-2">৳52K</p>
         </div>
+        <div className="bg-[#1e293b] p-5 rounded-[18px]">
+          <h4 className="text-gray-400 text-xs">Referral Bonus</h4>
+          <p className="text-2xl font-bold mt-2">৳11K</p>
+        </div>
+      </div>
 
-        {/* Investment Plans Section */}
-        <div className="flex justify-between items-end mb-5">
-          <h2 className="text-lg font-bold text-white tracking-wide">Premium Plans</h2>
-          <span className="text-xs font-medium text-emerald-400 flex items-center cursor-pointer hover:text-emerald-300 transition-colors">
-            View All <ChevronRight size={14} />
-          </span>
-        </div>
-        
-        {fetchingPlans ? (
-          <div className="flex flex-col items-center justify-center py-12 bg-slate-900/30 rounded-2xl border border-slate-800">
-            <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
-            <p className="text-sm text-slate-500 font-medium">Syncing live data...</p>
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="flex flex-col items-center text-center py-12 px-6 bg-slate-900/40 rounded-3xl border border-slate-800 backdrop-blur-sm">
-            <AlertCircle size={32} className="text-slate-600 mb-3" />
-            <h3 className="text-slate-300 font-semibold mb-1">No Active Plans</h3>
-            <p className="text-xs text-slate-500">Wait for the admin to launch new solar investment packages.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {plans.map((plan) => (
-              <div key={plan.id} className="group relative bg-slate-800/40 hover:bg-slate-800/80 backdrop-blur-md border border-slate-700/50 hover:border-emerald-500/50 p-5 rounded-2xl transition-all duration-300 overflow-hidden">
-                {/* Glow effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                
-                <div className="flex justify-between items-start relative z-10">
-                  <div>
-                    <h3 className="font-bold text-lg text-white mb-1">{plan.name}</h3>
-                    <div className="flex flex-col gap-1 mt-3">
-                      <p className="text-sm text-slate-400 flex items-center gap-2">
-                        <TrendingUp size={14} className="text-emerald-400" />
-                        Daily Return: <span className="text-emerald-400 font-bold">৳{plan.daily}</span>
-                      </p>
-                      <p className="text-xs text-slate-500">Validity: {plan.validity} Days</p>
-                    </div>
-                  </div>
-                  <div className="text-right flex flex-col justify-between h-full">
-                    <p className="font-extrabold text-white text-xl mb-3">৳{plan.price}</p>
-                    <button 
-                      onClick={() => handleBuyPlan(plan)}
-                      disabled={loadingPlan === plan.id}
-                      className="relative overflow-hidden bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 py-2 text-sm font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:bg-slate-700 disabled:text-slate-500 disabled:shadow-none"
-                    >
-                      {loadingPlan === plan.id ? 'Processing...' : 'Invest Now'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Bottom Nav */}
+      <div className="fixed bottom-0 w-full bg-[#111827] p-4 flex justify-around border-t border-[#1e293b]">
+        {['🏠 Home', '📊 Market', '💼 Portfolio', '👤 Profile'].map((nav, i) => (
+          <div key={i} className="text-center text-xs">{nav.split(' ')[0]}<br/>{nav.split(' ')[1]}</div>
+        ))}
       </div>
     </div>
   );
