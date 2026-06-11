@@ -1,58 +1,55 @@
-/* ১. Tailwind CSS ইমপোর্ট */
 @import "tailwindcss";
 
-/* ২. গ্লোবাল অ্যাপ সেটিংস */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
-  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background-color: #0f172a; /* আপনার অ্যাপের ডার্ক ব্যাকগ্রাউন্ড */
-  color: #ffffff;
+  background-color: #050a14;
+  color: #fff;
   min-height: 100vh;
-  overflow-x: hidden;
+  display: flex;
+  justify-content: center; /* ডেস্কটপে সবকিছুর ফ্রেম সেন্টারে করবে */
+  margin: 0;
 }
 
-/* ৩. অ্যাপের মূল কনটেইনার ফিক্স */
 #root {
   width: 100%;
-  max-width: 500px; /* মোবাইল অ্যাপের জন্য সঠিক উইডথ */
-  margin: 0 auto;
+  max-width: 450px; /* মোবাইল অ্যাপের ফ্রেম */
   min-height: 100vh;
-  position: relative;
   background-color: #0f172a;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); 
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ৪. টাইপোগ্রাফি */
-h1, h2, h3, h4 {
-  color: #ffffff;
-  font-weight: 600;
+.section {
+  padding: 15px;
+  width: 100%;
 }
 
-p {
-  color: #94a3b8;
+/* Bottom Nav Fix - ডেস্কটপেও মাঝখানে থাকবে */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 450px; /* রুট এর সাথে মিল রেখে */
+  left: 0; 
+  right: 0;
+  margin: 0 auto; /* অটোমেটিক সেন্টারে রাখবে */
+  background: #111827;
+  padding: 15px 0;
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #1e293b;
+  z-index: 1000;
 }
 
-/* ৫. ইউটিলিটি ক্লাস ফিক্স */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* ৬. মোবাইল রেসপন্সিভনেস */
-@media (max-width: 640px) {
-  #root {
-    width: 100%;
-    padding-bottom: 80px; /* নিচের নেভিগেশনের জন্য জায়গা */
-  }
-}
-
-/* ৭. স্ক্রলবার হাইড (অ্যাপ লুক দেওয়ার জন্য) */
+/* Scrollbar styling for smooth look */
 ::-webkit-scrollbar {
-  display: none;
+  width: 0px;
 }
