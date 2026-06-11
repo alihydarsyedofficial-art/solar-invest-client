@@ -1,7 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ১. Tailwind CSS ইমপোর্ট (Vite + Tailwind v4 এর জন্য) */
+@import "tailwindcss";
 
+/* =========================================
+   ২. CSS Variables (Light Theme - Default)
+   ========================================= */
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -22,26 +24,21 @@
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Base Responsive Font Size */
-@media (max-width: 1024px) {
-  :root {
-    font-size: 16px;
-  }
-}
-
-/* Dark Mode Variables */
+/* =========================================
+   ৩. Dark Mode Variables (ডার্ক থিমের জন্য)
+   ========================================= */
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #9ca3af;
     --text-h: #f3f4f6;
-    --bg: #121212; /* Updated to your preferred dark theme background */
+    --bg: #121212; 
     --border: #2e303a;
     --code-bg: #1f2028;
     --accent: #c084fc;
@@ -56,9 +53,13 @@
   }
 }
 
+/* =========================================
+   ৪. Base HTML/Body Styles (গ্লোবাল ডিজাইন)
+   ========================================= */
 body {
   margin: 0;
-  /* The color and background are automatically handled by the :root variables */
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 #root {
@@ -73,8 +74,8 @@ body {
   box-sizing: border-box;
 }
 
-h1,
-h2 {
+/* Typography (টেক্সট এবং হেডিং স্টাইল) */
+h1, h2 {
   font-family: var(--heading);
   font-weight: 500;
   color: var(--text-h);
@@ -97,8 +98,7 @@ p {
   margin: 0;
 }
 
-code,
-.counter {
+code, .counter {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
@@ -112,8 +112,13 @@ code {
   background: var(--code-bg);
 }
 
-/* Responsive Headings */
+/* =========================================
+   ৫. Responsive Design (মোবাইল ও ট্যাবের জন্য)
+   ========================================= */
 @media (max-width: 1024px) {
+  :root {
+    font-size: 16px;
+  }
   h1 {
     font-size: 36px;
     margin: 20px 0;
