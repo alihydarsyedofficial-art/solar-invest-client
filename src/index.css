@@ -1,55 +1,25 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
 body {
   background-color: #050a14;
   color: #fff;
   min-height: 100vh;
   display: flex;
-  justify-content: center; /* ডেস্কটপে সবকিছুর ফ্রেম সেন্টারে করবে */
+  justify-content: center;
   margin: 0;
 }
 
 #root {
   width: 100%;
-  max-width: 450px; /* মোবাইল অ্যাপের ফ্রেম */
+  max-width: 450px;
   min-height: 100vh;
   background-color: #0f172a;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); 
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   position: relative;
   display: flex;
   flex-direction: column;
 }
 
-.section {
-  padding: 15px;
-  width: 100%;
-}
-
-/* Bottom Nav Fix - ডেস্কটপেও মাঝখানে থাকবে */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  max-width: 450px; /* রুট এর সাথে মিল রেখে */
-  left: 0; 
-  right: 0;
-  margin: 0 auto; /* অটোমেটিক সেন্টারে রাখবে */
-  background: #111827;
-  padding: 15px 0;
-  display: flex;
-  justify-content: space-around;
-  border-top: 1px solid #1e293b;
-  z-index: 1000;
-}
-
-/* Scrollbar styling for smooth look */
-::-webkit-scrollbar {
-  width: 0px;
-}
+::-webkit-scrollbar { width: 0px; }
